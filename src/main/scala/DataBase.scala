@@ -2,14 +2,11 @@ package upmc.akka.ppc
 
 import akka.actor._
 
-
-
 object DataBaseActor {
 	abstract class ObjetMusical
  	case class Note (pitch:Int, dur:Int, vol:Int) extends ObjetMusical
  	case class Chord (date:Int, notes:List[Note]) extends ObjetMusical
  	case class Measure (chords:List[Chord]) extends ObjetMusical
- 
  	case class GetMeasure (num:Int)
  	case class Start()
 
@@ -1154,5 +1151,3 @@ val measures : List [Measure] = measures1 ::: measures2
 }
 
 //////////////////////////
-
-
