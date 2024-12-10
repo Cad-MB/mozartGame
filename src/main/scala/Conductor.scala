@@ -1,7 +1,6 @@
 package upmc.akka.ppc
 
 import akka.actor.{Actor, ActorRef}
-
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 

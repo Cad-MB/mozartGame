@@ -1,17 +1,16 @@
 package upmc.akka.ppc
 
-import akka.actor.{Actor, ActorRef}
+import akka.actor.Actor
 
 import javax.sound.midi.ShortMessage._
 import javax.sound.midi._
-import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
 object PlayerActor {
   case class MidiNote(pitch: Int, vel: Int, dur: Int, at: Int)
 
-  val info = MidiSystem.getMidiDeviceInfo().find(_.getName == "Gervill")
+  val info = MidiSystem.getMidiDeviceInfo.find(_.getName == "Gervill")
   val device = info.map(MidiSystem.getMidiDevice).getOrElse {
     throw new IllegalStateException("[ERROR] Could not find Gervill synthesizer.")
   }
@@ -31,23 +30,29 @@ object PlayerActor {
   }
 }
 
-class PlayerActor() extends Actor {
+class PlayerActor extends Actor {
   import DataBaseActor._
   import PlayerActor._
 
   device.open()
 
+  override def postStop(): Unit = {
+    device.close()
+    println("[PlayerActor] MIDI device closed.")
+  }
+
   def receive: Receive = {
     case Measure(chords) =>
-      println("PlayerActor received a measure, preparing to play...")
+      println(s"[PlayerActor] Received Measure with ${chords.size} chords, scheduling notes...")
       chords.foreach { chord =>
         chord.notes.foreach { note =>
-          println(s"Scheduling note: pitch=${note.pitch}, vel=${note.vol}, dur=${note.dur}, at=${chord.date}")
+          println(s"[PlayerActor] Scheduling note: pitch=${note.pitch}, vel=${note.vol}, dur=${note.dur}, at=${chord.date}")
           self ! MidiNote(note.pitch, note.vol, note.dur, chord.date)
         }
       }
 
     case MidiNote(pitch, vel, dur, at) =>
+      println(s"[PlayerActor] Playing note: pitch=$pitch, vel=$vel, dur=$dur, at=$at")
       context.system.scheduler.scheduleOnce(at.milliseconds) {
         note_on(pitch, vel, 10)
       }
